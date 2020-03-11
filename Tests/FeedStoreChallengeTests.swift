@@ -43,6 +43,7 @@ class CoreDataFeedStore: FeedStore {
             coreDataFeedImage.imageDescription = $0.description
             coreDataFeedImage.location = $0.location
             coreDataFeedImage.url = $0.url
+            coreDataFeedImage.createdAt = $0.createdAt
             cache.addToFeed(coreDataFeedImage)
         })
         cache.timestamp = timestamp
@@ -56,7 +57,9 @@ class CoreDataFeedStore: FeedStore {
         let fetchRequest = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
         let fetchResponse = try! context.fetch(fetchRequest)
         if let cache = fetchResponse.last {
-            completion(.found(feed: cache.localFeed, timestamp: cache.timestamp))
+            let feed = cache.localFeed
+            let timestamp = cache.timestamp
+            completion(.found(feed: feed, timestamp: timestamp))
         } else {
             completion(.empty)
         }
@@ -127,9 +130,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 
 	func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
-//		let sut = makeSUT()
-//
-//		assertThatRetrieveHasNoSideEffectsOnNonEmptyCache(on: sut)
+		let sut = makeSUT()
+
+		assertThatRetrieveHasNoSideEffectsOnNonEmptyCache(on: sut)
 	}
 
 	func test_insert_deliversNoErrorOnEmptyCache() {

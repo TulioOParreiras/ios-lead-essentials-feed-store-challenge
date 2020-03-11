@@ -21,9 +21,10 @@ public class CoreDataFeedImage: NSManagedObject {
     @NSManaged public var location: String?
     @NSManaged public var url: URL
     @NSManaged public var imageDescription: String?
+    @NSManaged public var createdAt: Date
     
     var local: LocalFeedImage {
-        return LocalFeedImage(id: id, description: imageDescription, location: location, url: url)
+        return LocalFeedImage(id: id, description: imageDescription, location: location, url: url, createdAt: createdAt)
     }
 
 }

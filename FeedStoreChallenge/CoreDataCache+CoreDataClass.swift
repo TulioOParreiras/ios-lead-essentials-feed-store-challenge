@@ -22,7 +22,7 @@ public class CoreDataCache: NSManagedObject {
     
     private var feedAr: [CoreDataFeedImage] {
         let set = feed as? Set<CoreDataFeedImage> ?? []
-        return Array(set)
+        return set.sorted(by: { $0.createdAt < $1.createdAt })
     }
     
     public var localFeed: [LocalFeedImage] {
