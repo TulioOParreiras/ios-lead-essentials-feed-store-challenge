@@ -58,11 +58,7 @@ public class CoreDataFeedStore: FeedStore {
             let context = self.persistentContainer.viewContext
             let cache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context) as! CoreDataCache
             feed.forEach({
-                let coreDataFeedImage = NSEntityDescription.insertNewObject(forEntityName: "CoreDataFeedImage", into: context) as! CoreDataFeedImage
-                coreDataFeedImage.id = $0.id
-                coreDataFeedImage.imageDescription = $0.description
-                coreDataFeedImage.location = $0.location
-                coreDataFeedImage.url = $0.url
+                let coreDataFeedImage = $0.toCoreDataFeedImage(withContext: context)
                 cache.addToFeed(coreDataFeedImage)
             })
             cache.timestamp = timestamp
@@ -90,6 +86,21 @@ public class CoreDataFeedStore: FeedStore {
                 completion(.failure(error))
             }
         }
+    }
+    
+}
+
+// MARK: - Helpers
+
+private extension LocalFeedImage {
+    
+    func toCoreDataFeedImage(withContext context: NSManagedObjectContext) -> CoreDataFeedImage {
+        let coreDataFeedImage = NSEntityDescription.insertNewObject(forEntityName: "CoreDataFeedImage", into: context) as! CoreDataFeedImage
+        coreDataFeedImage.id = self.id
+        coreDataFeedImage.imageDescription = self.description
+        coreDataFeedImage.location = self.location
+        coreDataFeedImage.url = self.url
+        return coreDataFeedImage
     }
     
 }
