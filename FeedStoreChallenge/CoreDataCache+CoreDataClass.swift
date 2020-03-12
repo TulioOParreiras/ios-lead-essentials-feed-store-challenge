@@ -18,11 +18,10 @@ public class CoreDataCache: NSManagedObject {
     }
 
     @NSManaged public var timestamp: Date
-    @NSManaged public var feed: NSSet?
+    @NSManaged public var feed: NSOrderedSet
     
     private var feedAr: [CoreDataFeedImage] {
-        let set = feed as? Set<CoreDataFeedImage> ?? []
-        return set.sorted(by: { $0.createdAt < $1.createdAt })
+        return self.feed.array as? [CoreDataFeedImage] ?? []
     }
     
     public var localFeed: [LocalFeedImage] {

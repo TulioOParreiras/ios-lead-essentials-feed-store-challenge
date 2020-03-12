@@ -2,10 +2,9 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="15702" systemVersion="19D76" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="CoreDataCache" representedClassName="CoreDataCache" syncable="YES">
         <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="feed" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CoreDataFeedImage"/>
+        <relationship name="feed" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="CoreDataFeedImage"/>
     </entity>
     <entity name="CoreDataFeedImage" representedClassName="CoreDataFeedImage" syncable="YES">
-        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="imageDescription" optional="YES" attributeType="String"/>
         <attribute name="location" optional="YES" attributeType="String"/>
@@ -13,6 +12,6 @@
     </entity>
     <elements>
         <element name="CoreDataCache" positionX="-54" positionY="18" width="128" height="73"/>
-        <element name="CoreDataFeedImage" positionX="-63" positionY="-18" width="128" height="118"/>
+        <element name="CoreDataFeedImage" positionX="-63" positionY="-18" width="128" height="103"/>
     </elements>
 </model>
