@@ -38,17 +38,14 @@ public class CoreDataFeedStore: FeedStore {
             guard let self = self else { return }
             let context = self.persistentContainer.viewContext
             let fetchCache = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
-            let caches = try! context.fetch(fetchCache)
-            caches.forEach({
-                context.delete($0)
-            })
             let fetchFeedImage = NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
-            let feedImages = try! context.fetch(fetchFeedImage)
-            feedImages.forEach({
-                context.delete($0)
-            })
-            try! context.save()
-            completion(nil)
+            do {
+                try self.deleteAllFetch(from: fetchCache, andContext: context)
+                try self.deleteAllFetch(from: fetchFeedImage, andContext: context)
+                completion(nil)
+            } catch {
+                completion(error)
+            }
         }
     }
     
@@ -63,8 +60,12 @@ public class CoreDataFeedStore: FeedStore {
             })
             cache.timestamp = timestamp
             
-            try! context.save()
-            completion(nil)
+            do {
+                try context.save()
+                completion(nil)
+            } catch {
+                completion(error)
+            }
         }
     }
     
@@ -91,6 +92,17 @@ public class CoreDataFeedStore: FeedStore {
 }
 
 // MARK: - Helpers
+
+private extension CoreDataFeedStore {
+    
+    private func deleteAllFetch<T: NSManagedObject>(from fetchRequest: NSFetchRequest<T>, andContext context: NSManagedObjectContext) throws {
+        let fetchResults = try context.fetch(fetchRequest)
+        fetchResults.forEach({
+            context.delete($0)
+        })
+    }
+    
+}
 
 private extension LocalFeedImage {
     
