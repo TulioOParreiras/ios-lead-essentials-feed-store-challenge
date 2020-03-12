@@ -5,121 +5,8 @@
 import XCTest
 import FeedStoreChallenge
 
-import CoreData
-
-class CoreDataFeedStore: FeedStore {
-    
-    public init() { }
-    
-    private let identifier = "com.essentialdeveloper.FeedStoreChallenge"
-    private let model = "FeedCache"
-    
-    private let queue = DispatchQueue(label: "\(CoreDataFeedStore.self)Queue", qos: .userInitiated, attributes: .concurrent)
-    
-    public lazy var persistentContainer: NSPersistentContainer = {
-        let feedStoreChallengeBundle = Bundle(identifier: identifier)
-        let modelURL = feedStoreChallengeBundle!.url(forResource: model, withExtension: "momd")!
-        let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)
-        let container = NSPersistentContainer(name: model, managedObjectModel: managedObjectModel!)
-        container.loadPersistentStores { (storeDescription, error) in
-            if let err = error {
-                fatalError("Loading of store failed: \(err)")
-            }
-        }
-        
-        return container
-    }()
-    
-    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            let context = self.persistentContainer.viewContext
-            let fetchCache = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
-            let caches = try! context.fetch(fetchCache)
-            caches.forEach({
-                context.delete($0)
-            })
-            let fetchFeedImage = NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
-            let feedImages = try! context.fetch(fetchFeedImage)
-            feedImages.forEach({
-                context.delete($0)
-            })
-            try! context.save()
-            completion(nil)
-        }
-    }
-    
-    func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            let context = self.persistentContainer.viewContext
-            let cache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context) as! CoreDataCache
-            feed.forEach({
-                let coreDataFeedImage = NSEntityDescription.insertNewObject(forEntityName: "CoreDataFeedImage", into: context) as! CoreDataFeedImage
-                coreDataFeedImage.id = $0.id
-                coreDataFeedImage.imageDescription = $0.description
-                coreDataFeedImage.location = $0.location
-                coreDataFeedImage.url = $0.url
-                cache.addToFeed(coreDataFeedImage)
-            })
-            cache.timestamp = timestamp
-            
-            try! context.save()
-            completion(nil)
-        }
-    }
-    
-    func retrieve(completion: @escaping RetrievalCompletion) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            let context = self.persistentContainer.viewContext
-            let fetchRequest = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
-            do {
-                let fetchResponse = try context.fetch(fetchRequest)
-                if let cache = fetchResponse.last {
-                    let feed = cache.localFeed
-                    let timestamp = cache.timestamp
-                    completion(.found(feed: feed, timestamp: timestamp))
-                } else {
-                    completion(.empty)
-                }
-            } catch {
-                completion(.failure(error))
-            }
-        }
-    }
-    
-}
-
 
 class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
-    
-    private func setupEmptyStoreState() {
-        deleteStoreArtifacts()
-    }
-    
-    private func undoStoreSideEffects() {
-        deleteStoreArtifacts()
-    }
-    
-    private  func deleteStoreArtifacts() {
-        let context = self.testSpecificContext()
-        let fetchCache = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
-        let caches = try! context.fetch(fetchCache)
-        caches.forEach({
-            context.delete($0)
-        })
-        let fetchFeedImage = NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
-        let feedImages = try! context.fetch(fetchFeedImage)
-        feedImages.forEach({
-            context.delete($0)
-        })
-        try! context.save()
-    }
-    
-    private func testSpecificContext() -> NSManagedObjectContext {
-        return CoreDataFeedStore().persistentContainer.viewContext
-    }
     
     override func setUp() {
         super.setUp()
@@ -218,6 +105,37 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
         return sut
     }
     
+    private func setupEmptyStoreState() {
+        deleteStoreArtifacts()
+    }
+    
+    private func undoStoreSideEffects() {
+        deleteStoreArtifacts()
+    }
+    
+    private  func deleteStoreArtifacts() {
+        let context = self.testSpecificContext()
+        let fetchCache = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
+        do {
+            let caches = try context.fetch(fetchCache)
+            caches.forEach({
+                context.delete($0)
+            })
+            let fetchFeedImage = NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
+            let feedImages = try context.fetch(fetchFeedImage)
+            feedImages.forEach({
+                context.delete($0)
+            })
+            try context.save()
+        } catch {
+            fatalError("Failed to clean context")
+        }
+    }
+    
+    private func testSpecificContext() -> NSManagedObjectContext {
+        return CoreDataFeedStore().persistentContainer.viewContext
+    }
+    
 }
 
 //
@@ -225,25 +143,21 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 // Otherwise, delete the commented out code!
 //
 
-extension FeedStoreChallengeTests: FailableRetrieveFeedStoreSpecs {
-
-	func test_retrieve_deliversFailureOnRetrievalError() {
+//extension FeedStoreChallengeTests: FailableRetrieveFeedStoreSpecs {
+//
+//	func test_retrieve_deliversFailureOnRetrievalError() {
 //		let sut = makeSUT()
-//        let context = self.testSpecificContext()
-//        let cache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context)
-////        cache.setValue("invalid data", forKey: "invalid key")
-//        try! context.save()
-//        
-//		assertThatRetrieveDeliversFailureOnRetrievalError(on: sut)
-	}
 
-	func test_retrieve_hasNoSideEffectsOnFailure() {
+//		assertThatRetrieveDeliversFailureOnRetrievalError(on: sut)
+//	}
+//
+//	func test_retrieve_hasNoSideEffectsOnFailure() {
 //		let sut = makeSUT()
 //
 //		assertThatRetrieveHasNoSideEffectsOnFailure(on: sut)
-	}
-
-}
+//	}
+//
+//}
 
 //extension FeedStoreChallengeTests: FailableInsertFeedStoreSpecs {
 //
